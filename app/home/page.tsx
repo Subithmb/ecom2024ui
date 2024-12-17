@@ -1,20 +1,25 @@
-"use client";
-// import { axiosInstance } from "./dataProvider/dataProvider";
-import HomePage from "./home/page";
+import React from "react";
+import Navbar from "./navBar";
 
-export default function Home() {
+const HomePage = () => {
   return (
     <div>
-      <HomePage />
+      <Navbar />
+      <div className="container mx-auto mt-4">
+        {/* Main Content */}
+        <h1>Welcome to the Home Page!</h1>
+      </div>
     </div>
   );
-}
+};
 
-// // import axios from "axios";
-// import { axiosInstance } from "./dataProvider/dataProvider";
+export default HomePage;
+
+// "use client";
 // import { useEffect, useState } from "react";
+// import { axiosInstance } from "../dataProvider/dataProvider";
 
-// export default function Home() {
+// export default function HomePage() {
 //   const [data, setData] = useState(null);
 //   const [error, setError] = useState(null);
 
