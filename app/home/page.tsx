@@ -1,13 +1,16 @@
 import React from "react";
 import Navbar from "./navBar";
+import HomeP from "./home";
 
 const HomePage = () => {
   return (
     <div>
-      <Navbar />
-      <div className="container mx-auto mt-4">
+      <div className="fixed top-0 left-0 w-full z-50  shadow-md m">
+        <Navbar />
+      </div>
+      <div className="container mx-auto">
         {/* Main Content */}
-        <h1>Welcome to the Home Page!</h1>
+        <HomeP />
       </div>
     </div>
   );

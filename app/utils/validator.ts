@@ -24,3 +24,7 @@ export const validateImageFile = (file: File) => {
     allowedTypes.includes(file.type) && file.size <= maxSizeInMB * 1024 * 1024
   );
 };
+
+export const validateNumber = (num: string): boolean => {
+  return parseInt(num) > 0;
+};

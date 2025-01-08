@@ -9,6 +9,7 @@ import EmailField from "@/app/components/formFields/emailComponent";
 import { validateEmail, validatePassword } from "@/app/utils/validator";
 import PasswordField from "@/app/components/formFields/passwordField";
 import Button from "@/app/components/button/buttonComponent";
+import { ApiEnum } from "@/app/utils/enumUtils";
 
 const LoginPage = () => {
   const [formData, setFormData] = useFormData({
@@ -19,7 +20,10 @@ const LoginPage = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      setSession(userLogin(formData));
+      const data = await userLogin(formData);
+      setSession(data);
+      window.location.href = ApiEnum.home;
+
       // setData(response.data);
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (err: any) {}
@@ -55,6 +59,12 @@ const LoginPage = () => {
             Sign Up
           </Link>
         </p>
+        {/* <p className="text-sm text-center text-gray-600">
+          Don't have an account?{" "}
+          <Link className="text-blue-500 hover:underline" href="createProduct">
+            Sign Up
+          </Link>
+        </p> */}
       </div>
     </div>
   );

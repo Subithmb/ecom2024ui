@@ -4,9 +4,10 @@ import React, { useState, useRef } from "react";
 
 interface DragAndDropProps {
   label: string;
-  onFileSelect: (file: { key: string; file: File } | null) => void;
+  onFileSelect: (file: { key: string; files: File[] } | null) => void;
   fieldKey: string;
   validateFile?: (file: File) => boolean;
+  isMultiple?: boolean; // New prop for enabling/disabling multiple file selection
 }
 
 const DragAndDrop: React.FC<DragAndDropProps> = ({
@@ -14,27 +15,40 @@ const DragAndDrop: React.FC<DragAndDropProps> = ({
   onFileSelect,
   fieldKey,
   validateFile,
+  isMultiple = false, // Default value is false
 }) => {
   const [dragging, setDragging] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [preview, setPreview] = useState<string | null>(null);
-  const [file, setFile] = useState<File | null>(null);
+  const [previews, setPreviews] = useState<string[]>([]);
+  const [files, setFiles] = useState<File[]>([]);
 
   const fileInputRef = useRef<HTMLInputElement | null>(null);
 
-  const handleFileDrop = (files: FileList) => {
-    const newFile = files[0];
-    if (!newFile) return;
+  const handleFileDrop = (droppedFiles: FileList) => {
+    const newFiles: File[] = Array.from(droppedFiles);
+    const validFiles = validateFile
+      ? newFiles.filter((file) => validateFile(file))
+      : newFiles;
 
-    if (validateFile && !validateFile(newFile)) {
-      setError("Invalid file type or size.");
-      return;
+    if (newFiles.length > validFiles.length) {
+      setError("Some files are invalid.");
+    } else {
+      setError(null);
     }
 
-    setError(null);
-    setPreview(URL.createObjectURL(newFile));
-    setFile(newFile);
-    onFileSelect({ key: fieldKey, file: newFile });
+    if (isMultiple) {
+      const filePreviews = validFiles.map((file) => URL.createObjectURL(file));
+      setFiles((prevFiles) => [...prevFiles, ...validFiles]);
+      setPreviews((prevPreviews) => [...prevPreviews, ...filePreviews]);
+      onFileSelect({ key: fieldKey, files: [...files, ...validFiles] });
+    } else {
+      const firstFile = validFiles[0];
+      if (firstFile) {
+        setFiles([firstFile]);
+        setPreviews([URL.createObjectURL(firstFile)]);
+        onFileSelect({ key: fieldKey, files: [firstFile] });
+      }
+    }
   };
 
   const handleDragOver = (e: React.DragEvent<HTMLDivElement>) => {
@@ -64,14 +78,13 @@ const DragAndDrop: React.FC<DragAndDropProps> = ({
     }
   };
 
-  const handleRemoveFile = () => {
-    setPreview(null);
-    setFile(null);
-    setError(null);
-    onFileSelect(null);
-    if (fileInputRef.current) {
-      fileInputRef.current.value = "";
-    }
+  const handleRemoveFile = (index: number) => {
+    setFiles((prevFiles) => prevFiles.filter((_, i) => i !== index));
+    setPreviews((prevPreviews) => prevPreviews.filter((_, i) => i !== index));
+    onFileSelect({
+      key: fieldKey,
+      files: files.filter((_, i) => i !== index),
+    });
   };
 
   return (
@@ -89,36 +102,45 @@ const DragAndDrop: React.FC<DragAndDropProps> = ({
         onDragLeave={handleDragLeave}
         onDrop={handleDrop}
       >
-        {preview ? (
-          <div className="relative">
-            <img
-              src={preview}
-              alt="Preview"
-              className="max-w-full max-h-48 mb-2 rounded"
-            />
-            <button
-              onClick={handleRemoveFile}
-              className="absolute top-2 right-2 bg-black rounded-full w-8 h-8 flex items-center justify-center hover:bg-red-600 shadow-md"
-            >
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                fill="none"
-                viewBox="0 0 24 24"
-                strokeWidth={2}
-                stroke="white"
-                className="w-4 h-4"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  d="M6 18L18 6M6 6l12 12"
+        {previews.length > 0 ? (
+          <div
+            className={`grid ${
+              isMultiple ? "grid-cols-3 gap-4" : "grid-cols-1"
+            }`}
+          >
+            {previews.map((preview, index) => (
+              <div key={index} className="relative">
+                <img
+                  src={preview}
+                  alt={`Preview ${index}`}
+                  className="max-w-full max-h-24 mb-2 rounded"
                 />
-              </svg>
-            </button>
+                <button
+                  onClick={() => handleRemoveFile(index)}
+                  className="absolute top-2 right-2 bg-black rounded-full w-8 h-8 flex items-center justify-center hover:bg-red-600 shadow-md"
+                >
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    strokeWidth={2}
+                    stroke="white"
+                    className="w-4 h-4"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      d="M6 18L18 6M6 6l12 12"
+                    />
+                  </svg>
+                </button>
+              </div>
+            ))}
           </div>
         ) : (
           <p className="text-sm text-gray-500">
-            Drag and drop an image file here, or{" "}
+            Drag and drop {isMultiple ? "image files" : "an image file"} here,
+            or{" "}
             <span
               className="text-blue-500 underline cursor-pointer"
               onClick={handleBrowseClick}
@@ -130,6 +152,7 @@ const DragAndDrop: React.FC<DragAndDropProps> = ({
         <input
           type="file"
           accept="image/*"
+          multiple={isMultiple} // Dynamically enable multiple file selection
           onChange={handleInputChange}
           className="hidden"
           ref={fileInputRef}

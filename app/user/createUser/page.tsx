@@ -37,8 +37,8 @@ const createUser = () => {
   const { email, name, password, confirmPassword, role, contactNumber } =
     formData;
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const handleFileSelect = (data: { key: string; file: File } | any) => {
-    setFormData("image", data.file);
+  const handleFileSelect = (data: { key: string; files: File } | any) => {
+    setFormData("image", data.files[0]);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
